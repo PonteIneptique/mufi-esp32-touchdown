@@ -66,7 +66,8 @@ uint16_t keyColor[12] = {TFT_BLUE, TFT_RED, TFT_GREEN, TFT_NAVY,
 // Create 12 'keys' to use later
 TFT_eSPI_Button key[12];
 
-
+// Initial LED brightness
+int ledBrightness = 255;
 
 void setup() {
   
@@ -94,6 +95,16 @@ void setup() {
 
   // Clear the screen
   tft.fillScreen(TFT_BLACK);
+
+
+    // Setup PWM channel and attach pin bl_pin
+  ledcSetup(0, 5000, 8);
+#ifdef TFT_BL
+  ledcAttachPin(TFT_BL, 0);
+#else
+  ledcAttachPin(backlightPin, 0);
+#endif // defined(TFT_BL)
+  ledcWrite(0, ledBrightness); // Start @ initial Brightness
 
   // Draw the keys ( 3 times 4 loops to create 12)
   for (uint8_t row = 0; row < 3; row++) {   // 3 rows
