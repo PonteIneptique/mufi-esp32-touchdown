@@ -22,6 +22,9 @@
 #include <FT6236.h>   // FT6236 Touch Controller library
 #include <BleKeyboard.h> // BleKeyboard is used to communicate over BLE
 
+#include "junicode.h"
+#include "OpenFontRender.h" // OpenFontRender 
+
 #include "BLEDevice.h"   // Additional BLE functionaity
 #include "BLEUtils.h"    // Additional BLE functionaity
 #include "BLEBeacon.h"   // Additional BLE functionaity
@@ -43,18 +46,20 @@ BleKeyboard bleKeyboard("FreeTouchDeck", "Made by me");
 #define KEY_TEXTSIZE 3   // Font size multiplier
 
 // Choose the fnt you are using
-#define LABEL1_FONT &FreeSansOblique12pt7b // Key label font
+#define LABEL1_FONT &Junicode // Key label font
 
 // Create the touch object
 FT6236 ts = FT6236();
 
 // Create the screen object
 TFT_eSPI tft = TFT_eSPI();
+OpenFontRender ofr = OpenFontRender();
 
 // Creating the labels for the buttons
 // <name>[<number-of-lables>][<number-of-chars-per-label]
 // The number of chars per label should include the termination \0.
-char keyLabel[12][3] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+char keyLabel[12][5] = {"q", "q", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
+// {"ꝙ", "ꝗ", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
 
 // Setting the colour for each button
 // You can use the colours defined in TFT_eSPI.h
@@ -73,6 +78,13 @@ void setup() {
   
   Serial.begin(9600);
   Serial.println("");
+
+  
+  if (ofr.loadFont(Junicode, sizeof(Junicode)))
+  {
+    Serial.println("Render initialize error");
+    return;
+  }
   
   //------------------BLE Initialization ------------------------------------------------------------------------
   
@@ -99,12 +111,16 @@ void setup() {
 
     // Setup PWM channel and attach pin bl_pin
   ledcSetup(0, 5000, 8);
-#ifdef TFT_BL
-  ledcAttachPin(TFT_BL, 0);
-#else
-  ledcAttachPin(backlightPin, 0);
-#endif // defined(TFT_BL)
-  ledcWrite(0, ledBrightness); // Start @ initial Brightness
+  
+  #ifdef TFT_BL
+    ledcAttachPin(TFT_BL, 0);
+  #else
+    ledcAttachPin(backlightPin, 0);
+  #endif // defined(TFT_BL)
+    ledcWrite(0, ledBrightness); // Start @ initial Brightness
+
+    
+  ofr.setDrawer(tft); // Link drawing object to tft instance (so font will be rendered on TFT)
 
   // Draw the keys ( 3 times 4 loops to create 12)
   for (uint8_t row = 0; row < 3; row++) {   // 3 rows
@@ -193,11 +209,11 @@ void buttonpress(int button)
   //Handle a button press. Buttons are 0 indexed, meaning that the first button is button 0.
   switch(button){
     case 0:
-     typeUnicodeUbuntu("a757");
+     typeUnicodeUbuntu("a759");
      // Doing nothing for now.
      break;
     case 1:
-     Serial.println("Button 2 pressed");
+     typeUnicodeUbuntu("a757");
      // Doing nothing for now
      break;
     case 2:
@@ -250,7 +266,7 @@ void beep(){
       ledcWriteTone(0, 1000);
       delay(150);
       ledcDetachPin(26);
-      ledcWrite(0, 0);
+      ledcWrite(0, ledBrightness);
 
 }
   
